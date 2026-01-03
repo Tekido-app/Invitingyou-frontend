@@ -192,7 +192,12 @@ export const TextToolbar = ({ selectedObject, onUpdate }: TextToolbarProps) => {
           {Object.entries(fontCategories).map(([category, fonts]) => (
             <optgroup key={category} label={category}>
               {fonts.map((font) => (
-                <option key={font} value={font} style={{ fontFamily: font }}>
+                <option
+                  key={font}
+                  value={font}
+                  style={{ fontFamily: font }}
+                  className="text-black"
+                >
                   {font}
                 </option>
               ))}
@@ -212,7 +217,7 @@ export const TextToolbar = ({ selectedObject, onUpdate }: TextToolbarProps) => {
           className="w-full px-3 py-2 text-sm bg-white/10 border border-white/20 rounded-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-orange"
         >
           {fontSizes.map((size) => (
-            <option key={size} value={size}>
+            <option key={size} value={size} className="text-black">
               {size}px
             </option>
           ))}

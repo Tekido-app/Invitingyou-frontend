@@ -13,9 +13,19 @@ import { Templates } from "./pages/Templates";
 import { Editor } from "./pages/Editor";
 import { CreateEvent } from "./pages/CreateEvent";
 import { EventDashboard } from "./pages/EventDashboard";
+import { ReviewInvitation } from "./pages/ReviewInvitation";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { Navbar } from "./components/layout/Navbar";
 import { PublicRSVP } from "./pages/PublicRSVP";
+import { About } from "./pages/About";
+import { Pricing } from "./pages/Pricing";
+import { PartyTips } from "./pages/PartyTips";
+import { WordingIdeas } from "./pages/WordingIdeas";
+import { Contact } from "./pages/Contact";
+import { HelpCenter } from "./pages/HelpCenter";
+import { PrivacyPolicy } from "./pages/PrivacyPolicy";
+import { TermsOfService } from "./pages/TermsOfService";
+import { Press } from "./pages/Press";
 
 import { AuthProvider } from "./context/AuthContext";
 
@@ -39,6 +49,17 @@ function AppContent() {
         <Route path="/templates" element={<Templates />} />
         <Route path="/rsvp/:eventId/:guestId" element={<PublicRSVP />} />
         <Route path="/rsvp/:eventId" element={<PublicRSVP />} />
+
+        {/* Information pages */}
+        <Route path="/about" element={<About />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/party-tips" element={<PartyTips />} />
+        <Route path="/wording-ideas" element={<WordingIdeas />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/help" element={<HelpCenter />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/press" element={<Press />} />
 
         {/* Protected routes */}
         <Route
@@ -70,6 +91,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <CreateEvent />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/event/review/:eventId"
+          element={
+            <ProtectedRoute>
+              <ReviewInvitation />
             </ProtectedRoute>
           }
         />

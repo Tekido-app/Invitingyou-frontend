@@ -1,5 +1,13 @@
 import * as fabric from "fabric";
-import { Layers, Eye, EyeOff, Trash2, Lock, Unlock } from "lucide-react";
+import {
+  Layers,
+  Eye,
+  EyeOff,
+  Trash2,
+  Lock,
+  Unlock,
+  GripVertical,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface LayersModuleProps {
@@ -19,6 +27,8 @@ export const LayersModule = ({ canvas, onLayerChange }: LayersModuleProps) => {
   const [layers, setLayers] = useState<LayerInfo[]>([]);
   const [selectedLayer, setSelectedLayer] =
     useState<fabric.FabricObject | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!canvas) return;
@@ -133,6 +143,54 @@ export const LayersModule = ({ canvas, onLayerChange }: LayersModuleProps) => {
     onLayerChange?.();
   };
 
+  // Drag and Drop handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", "");
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (!canvas || draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const objects = canvas.getObjects();
+    const draggedObject = objects[draggedIndex];
+
+    // Remove the dragged object
+    canvas.remove(draggedObject);
+
+    // Calculate new index (accounting for removal)
+    const newIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+
+    // Insert at new position
+    canvas.insertAt(newIndex, draggedObject);
+    canvas.renderAll();
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    onLayerChange?.();
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "text":
@@ -154,7 +212,7 @@ export const LayersModule = ({ canvas, onLayerChange }: LayersModuleProps) => {
           Layers
         </h4>
         <p className="text-xs text-gray-400 mb-4">
-          Manage all elements on your canvas
+          Drag to reorder • Manage all elements
         </p>
       </div>
 
@@ -172,17 +230,34 @@ export const LayersModule = ({ canvas, onLayerChange }: LayersModuleProps) => {
         <div className="space-y-1">
           {layers.map((layer, index) => {
             const isSelected = selectedLayer === layer.object;
+            const isDragging = draggedIndex === index;
+            const isDragOver = dragOverIndex === index;
 
             return (
               <div
                 key={index}
-                className={`group rounded-sm transition-all ${
+                draggable={!layer.locked}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`group rounded-sm transition-all cursor-move ${
+                  isDragging ? "opacity-50 scale-95" : ""
+                } ${isDragOver ? "border-t-2 border-brand-orange" : ""} ${
                   isSelected
                     ? "bg-brand-orange/20 border border-brand-orange"
                     : "bg-white/5 border border-transparent hover:bg-white/10"
                 }`}
               >
                 <div className="flex items-center gap-2 p-2">
+                  {/* Drag Handle */}
+                  {!layer.locked && (
+                    <div className="cursor-grab active:cursor-grabbing shrink-0">
+                      <GripVertical className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
+                    </div>
+                  )}
+
                   {/* Type Icon */}
                   <div
                     className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold shrink-0 ${

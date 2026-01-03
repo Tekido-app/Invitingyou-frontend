@@ -1,31 +1,33 @@
 import React from "react";
-import { cn } from "../../lib/utils"; // Assuming you have a utils/cn helper, if not I'll create one or use inline clsx
+import { cn } from "../../lib/utils";
 
 interface LogoProps {
   className?: string;
-  variant?: "dark" | "light";
+  variant?: "dark" | "light"; // dark = for light backgrounds (navbar), light = for dark backgrounds (footer)
 }
 
 export const Logo: React.FC<LogoProps> = ({ className, variant = "dark" }) => {
+  // Footer Variant - Full Logo
+  if (variant === "light") {
+    return (
+      <div className={cn("inline-block", className)}>
+        <img
+          src="/logo-footer.png"
+          alt="InvitingYou"
+          className="h-24 w-auto rounded-sm"
+        />
+      </div>
+    );
+  }
+
+  // Navbar Variant - Text Logo Image
   return (
-    <div className={cn("flex items-center gap-2 select-none", className)}>
-      {/* Optional: Add a simple geometric icon here if needed later */}
-      <span
-        className={`text-2xl font-bold tracking-tight ${
-          variant === "light" ? "text-white" : "text-brand-mirage"
-        }`}
-      >
-        Inviting
-        <span
-          className={
-            variant === "light"
-              ? "text-white italic"
-              : "text-brand-orange italic"
-          }
-        >
-          You
-        </span>
-      </span>
+    <div className={cn("flex items-center select-none", className)}>
+      <img
+        src="/logo-text.png"
+        alt="InvitingYou"
+        className="h-8 w-auto object-contain"
+      />
     </div>
   );
 };
