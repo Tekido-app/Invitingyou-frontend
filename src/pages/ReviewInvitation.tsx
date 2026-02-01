@@ -14,6 +14,13 @@ import {
 } from "lucide-react";
 import * as fabric from "fabric";
 
+interface Guest {
+  _id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+}
+
 export const ReviewInvitation = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
@@ -51,6 +58,9 @@ export const ReviewInvitation = () => {
         if (fabricCanvasRef.current) {
           fabricCanvasRef.current.dispose();
         }
+
+        // Check if canvas element exists
+        if (!canvasRef.current) return;
 
         // Create new canvas
         const canvas = new fabric.Canvas(canvasRef.current, {
@@ -106,12 +116,15 @@ export const ReviewInvitation = () => {
         );
         navigate(`/dashboard/events/${eventId}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error sending invitations:", error);
-      alert(
-        error.response?.data?.message ||
-          "Failed to send invitations. Please try again."
-      );
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : (error as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message ||
+            "Failed to send invitations. Please try again.";
+      alert(errorMessage);
     } finally {
       setIsSending(false);
     }
@@ -351,7 +364,7 @@ export const ReviewInvitation = () => {
 
                 {guestCount > 0 && (
                   <div className="space-y-2">
-                    {guests.slice(0, 5).map((guest: any, index: number) => (
+                    {guests.slice(0, 5).map((guest: Guest, index: number) => (
                       <div
                         key={guest._id || index}
                         className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
