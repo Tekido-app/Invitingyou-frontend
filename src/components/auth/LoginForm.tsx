@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { loginSchema, type LoginFormData } from "../../utils/validators";
 import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../utils/errorHandler";
@@ -25,18 +26,22 @@ export const LoginForm = () => {
       setError("");
       setIsSubmitting(true);
       await login(data.email, data.password);
+      toast.success("Welcome back! Logged in successfully");
       navigate("/");
     } catch (err: unknown) {
-      setError(getErrorMessage(err) || "Login failed. Please try again.");
+      const errorMessage =
+        getErrorMessage(err) || "Login failed. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 md:space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
           {error}
         </div>
       )}
@@ -52,8 +57,9 @@ export const LoginForm = () => {
           {...register("email")}
           type="email"
           id="email"
-          className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base md:text-sm"
           placeholder="you@example.com"
+          autoComplete="email"
         />
         {errors.email && (
           <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -71,8 +77,9 @@ export const LoginForm = () => {
           {...register("password")}
           type="password"
           id="password"
-          className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base md:text-sm"
           placeholder="••••••••"
+          autoComplete="current-password"
         />
         {errors.password && (
           <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
@@ -82,7 +89,7 @@ export const LoginForm = () => {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full bg-brand-black text-white py-2 px-4 rounded-sm hover:bg-brand-black/90 focus:ring-4 focus:ring-brand-cream-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full bg-brand-black text-white py-3 md:py-2 px-4 rounded-sm hover:bg-brand-black/90 focus:ring-4 focus:ring-brand-cream-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-h-[48px] flex items-center justify-center"
       >
         {isSubmitting ? "Logging in..." : "Log In"}
       </button>

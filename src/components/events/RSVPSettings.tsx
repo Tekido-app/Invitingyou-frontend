@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 
 export interface RSVPSettingsFormData {
@@ -29,6 +29,19 @@ export const RSVPSettings = ({
   });
 
   const [newQuestion, setNewQuestion] = useState("");
+
+  // Update form data when initialData changes (e.g., when loading existing event)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        rsvpEnabled: initialData.rsvpEnabled ?? true,
+        rsvpDeadline: initialData.rsvpDeadline || "",
+        guestLimit: initialData.guestLimit || null,
+        allowGuestView: initialData.allowGuestView ?? false,
+        customQuestions: initialData.customQuestions || [],
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,7 +1,10 @@
 import { useSearchParams } from "react-router-dom";
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import { staggerContainer, staggerItem } from "../utils/animations";
 import { useTemplates } from "../hooks/useTemplates";
 import { TemplateCard } from "../components/templates/TemplateCard";
+import { SkeletonCard } from "../components/common/Skeleton";
 import { TemplateSidebar } from "../components/templates/TemplateSidebar";
 import { TemplateQuickView } from "../components/templates/TemplateQuickView";
 import { MainLayout } from "../components/layout/MainLayout";
@@ -52,7 +55,7 @@ export const Templates = () => {
   };
 
   const displayCategory = category
-    ? categoryNames[category] || category
+    ? categoryNames[category] || (category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' '))
     : "All";
 
   const displayDescription = category
@@ -187,11 +190,7 @@ export const Templates = () => {
               {isLoading && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[...Array(9)].map((_, i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="aspect-[3/4] bg-brand-sand rounded-sm mb-4" />
-                      <div className="h-4 bg-brand-sand rounded w-3/4 mb-2" />
-                      <div className="h-3 bg-brand-sand rounded w-1/2" />
-                    </div>
+                    <SkeletonCard key={i} />
                   ))}
                 </div>
               )}
@@ -254,21 +253,27 @@ export const Templates = () => {
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <motion.div
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                      variants={staggerContainer}
+                      initial="initial"
+                      animate="animate"
+                    >
                       {filteredTemplates.map((template) => (
-                        <TemplateCard
-                          key={template._id}
-                          _id={template._id}
-                          name={template.name}
-                          category={template.category}
-                          subcategory={template.subcategory}
-                          thumbnail={template.thumbnail}
-                          designData={template.designData}
-                          isPremium={template.isPremium}
-                          onQuickView={handleQuickView}
-                        />
+                        <motion.div key={template._id} variants={staggerItem}>
+                          <TemplateCard
+                            _id={template._id}
+                            name={template.name}
+                            category={template.category}
+                            subcategory={template.subcategory}
+                            thumbnail={template.thumbnail}
+                            designData={template.designData}
+                            isPremium={template.isPremium}
+                            onQuickView={handleQuickView}
+                          />
+                        </motion.div>
                       ))}
-                    </div>
+                    </motion.div>
                   )}
                 </>
               )}

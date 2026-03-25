@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export interface EventDetailsFormData {
   title: string;
@@ -25,6 +25,18 @@ export const EventDetailsForm = ({
     venue: initialData?.venue || "",
   });
 
+  // Update form data when initialData changes (e.g., when loading existing event)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        title: initialData.title || "",
+        description: initialData.description || "",
+        eventDate: initialData.eventDate || "",
+        venue: initialData.venue || "",
+      });
+    }
+  }, [initialData]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
@@ -38,7 +50,7 @@ export const EventDetailsForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5 md:space-y-4">
       <div>
         <label className="block text-sm font-medium text-brand-black mb-1">
           Event Title
@@ -48,7 +60,7 @@ export const EventDetailsForm = ({
           name="title"
           value={formData.title}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
           required
         />
       </div>
@@ -62,7 +74,7 @@ export const EventDetailsForm = ({
           value={formData.description}
           onChange={handleChange}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
         />
       </div>
 
@@ -75,7 +87,7 @@ export const EventDetailsForm = ({
           name="eventDate"
           value={formData.eventDate}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-brand-cream rounded-md focus:outline-none focus:ring-2 focus:ring-brand-cream-dark"
+          className="w-full px-4 py-3 md:py-2 border border-brand-cream rounded-md focus:outline-none focus:ring-2 focus:ring-brand-cream-dark text-base md:text-sm"
           required
         />
       </div>
@@ -89,7 +101,7 @@ export const EventDetailsForm = ({
           name="venue"
           value={formData.venue}
           onChange={handleChange}
-          className="w-full px-3 py-2 border border-brand-cream rounded-md focus:outline-none focus:ring-2 focus:ring-brand-cream-dark"
+          className="w-full px-4 py-3 md:py-2 border border-brand-cream rounded-md focus:outline-none focus:ring-2 focus:ring-brand-cream-dark text-base md:text-sm"
           required
         />
       </div>
@@ -97,7 +109,7 @@ export const EventDetailsForm = ({
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full px-4 py-2 bg-brand-black text-white rounded-md hover:bg-brand-black/90 disabled:opacity-50"
+        className="w-full px-4 py-3 md:py-2 bg-brand-black text-white rounded-md hover:bg-brand-black/90 disabled:opacity-50 font-medium min-h-[48px] flex items-center justify-center"
       >
         {isLoading ? "Saving..." : "Continue"}
       </button>

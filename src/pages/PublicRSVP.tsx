@@ -9,6 +9,7 @@ import { Label } from "../components/ui/Label";
 import { Loader2, PartyPopper, Calendar } from "lucide-react";
 import { Logo } from "../components/ui/Logo";
 import { generateICS, downloadICS } from "../utils/icsGenerator";
+import { FabricCanvas } from "../components/editor/FabricCanvas";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -19,6 +20,7 @@ interface EventData {
   eventDate?: Date | string;
   venue?: string;
   customQuestions?: string[];
+  customData?: object;
 }
 
 interface GuestData {
@@ -191,6 +193,15 @@ export const PublicRSVP = () => {
     <div className="min-h-screen bg-brand-sand py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <Logo className="mb-8 mx-auto" />
+
+        {/* Invitation Card Display */}
+        {event.customData && (
+          <Card className="mb-8 bg-white border-brand-sea/20 shadow-xl overflow-hidden">
+            <div className="w-full aspect-[3/4] bg-gray-50">
+              <FabricCanvas designData={event.customData} readOnly={true} />
+            </div>
+          </Card>
+        )}
 
         {/* Event Details Card */}
         <Card className="mb-8 bg-white border-brand-sea/20 shadow-xl overflow-hidden">

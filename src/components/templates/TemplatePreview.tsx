@@ -76,8 +76,8 @@ export const TemplatePreview = ({
         // Convert canvas to data URL
         const dataUrl = tempCanvas.toDataURL({
           format: "png",
-          quality: 0.8,
-          multiplier: 0.5, // Scale down for smaller file size
+          quality: 1,
+          multiplier: 2, // Scale up for high-quality preview
         });
 
         setPreviewUrl(dataUrl);

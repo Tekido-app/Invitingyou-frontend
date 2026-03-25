@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Heart, Crown } from "lucide-react";
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { scaleIn, transitions } from "../../utils/animations";
 import { TemplatePreview } from "./TemplatePreview";
 import type { CanvasDesignData } from "../../types/fabric";
 
@@ -67,11 +69,19 @@ export const TemplateCard = ({
   };
 
   return (
-    <div
+    <motion.div
+      variants={scaleIn}
+      initial="initial"
+      animate="animate"
+      whileHover={{
+        scale: 1.02,
+        transition: transitions.quick,
+      }}
+      whileTap={{ scale: 0.98 }}
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="overflow-hidden transition-all duration-500 cursor-pointer group"
+      className="overflow-hidden cursor-pointer group"
     >
       {/* Premium Card Container with Envelope Effect */}
       <div className="relative">
@@ -79,7 +89,7 @@ export const TemplateCard = ({
         <div className="absolute inset-0 bg-brand-cream rounded-sm transform transition-transform duration-500 group-hover:-translate-y-1" />
 
         {/* Main Card */}
-        <div className="aspect-[3/4] relative overflow-hidden rounded-sm bg-white shadow-premium transition-all duration-500 group-hover:shadow-premium-hover group-hover:-translate-y-2">
+        <div className="aspect-[3/4] relative overflow-hidden rounded-sm bg-white shadow-md transition-all duration-300 group-hover:shadow-lg group-hover:-translate-y-2">
           {/* Card Content */}
           <div className="relative w-full h-full">
             {designData ? (
@@ -109,9 +119,12 @@ export const TemplateCard = ({
             )}
 
             {/* Favorite Button */}
-            <button
+            <motion.button
               onClick={toggleFavorite}
-              className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:scale-110 hover:bg-white transition-all z-10"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              transition={transitions.quick}
+              className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white z-10"
             >
               <Heart
                 className={`w-4 h-4 transition-colors ${
@@ -120,19 +133,24 @@ export const TemplateCard = ({
                     : "text-brand-charcoal/40 hover:text-red-400"
                 }`}
               />
-            </button>
+            </motion.button>
 
             {/* Hover Overlay */}
             <div
               className={`absolute inset-0 bg-brand-charcoal/0 transition-all duration-300 flex items-center justify-center ${isHovered ? "bg-brand-charcoal/20" : ""}`}
             >
               {isHovered && onQuickView && (
-                <button
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={transitions.quick}
                   onClick={handleQuickView}
-                  className="px-6 py-2.5 bg-white text-brand-charcoal rounded-sm font-medium text-sm hover:bg-brand-charcoal hover:text-white transition-all shadow-lg transform -translate-y-1"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-2.5 bg-white text-brand-charcoal rounded-sm font-medium text-sm hover:bg-brand-charcoal hover:text-white transition-all shadow-lg"
                 >
                   Quick View
-                </button>
+                </motion.button>
               )}
             </div>
           </div>
@@ -141,7 +159,7 @@ export const TemplateCard = ({
 
       {/* Card Footer */}
       <div className="pt-4 pb-2">
-        <h4 className="text-base font-medium text-brand-charcoal mb-1 truncate group-hover:text-brand-orange transition-colors">
+        <h4 className="text-base font-medium text-brand-charcoal mb-1 truncate group-hover:text-brand-cream-dark transition-colors">
           {name}
         </h4>
         <div className="flex items-center gap-1.5 text-xs text-brand-charcoal/50">
@@ -154,6 +172,6 @@ export const TemplateCard = ({
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

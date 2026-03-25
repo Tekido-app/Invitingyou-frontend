@@ -35,7 +35,7 @@ export const ContactUploadForm = ({
           placeholder="Name"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
           required
         />
       </div>
@@ -45,7 +45,7 @@ export const ContactUploadForm = ({
           placeholder="Email"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
           required
         />
       </div>
@@ -55,13 +55,13 @@ export const ContactUploadForm = ({
           placeholder="Phone (optional)"
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base md:text-sm"
         />
       </div>
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full px-4 py-2 bg-brand-black text-white rounded-md hover:bg-brand-black/90 disabled:opacity-50"
+        className="w-full px-4 py-3 md:py-2 bg-brand-black text-white rounded-md hover:bg-brand-black/90 disabled:opacity-50 font-medium min-h-[48px] flex items-center justify-center"
       >
         {isLoading ? "Adding..." : "Add Contact"}
       </button>

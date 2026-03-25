@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useRef, useEffect } from "react";
 import { MainLayout } from "../components/layout/MainLayout";
 import api from "../services/api";
 import {
@@ -12,6 +11,7 @@ import {
   Send,
   ArrowLeft,
 } from "lucide-react";
+import { FabricCanvas } from "../components/editor/FabricCanvas";
 import * as fabric from "fabric";
 
 interface Guest {
@@ -25,78 +25,93 @@ export const ReviewInvitation = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const [isSending, setIsSending] = useState(false);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const canvasInstanceRef = useRef<fabric.Canvas | null>(null);
+
+  const [eventData, setEventData] = useState<any>(null);
+  const [guestsData, setGuestsData] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch event data
-  const { data: eventData, isLoading } = useQuery({
-    queryKey: ["event", eventId],
-    queryFn: async () => {
-      const response = await api.get(`/api/events/${eventId}`);
-      return response.data.data;
-    },
-    enabled: !!eventId,
-  });
-
-  // Fetch guests
-  const { data: guestsData } = useQuery({
-    queryKey: ["guests", eventId],
-    queryFn: async () => {
-      const response = await api.get(`/api/events/${eventId}/guests`);
-      return response.data.data;
-    },
-    enabled: !!eventId,
-  });
-
-  // Initialize canvas preview
   useEffect(() => {
-    if (!canvasRef.current || !eventData?.customData) return;
+    const fetchData = async () => {
+      if (!eventId) return;
 
-    const initCanvas = async () => {
       try {
-        // Clean up existing canvas
-        if (fabricCanvasRef.current) {
-          fabricCanvasRef.current.dispose();
+        setIsLoading(true);
+        console.log("🔄 ReviewInvitation: Fetching event data for", eventId);
+
+        const [eventRes, guestsRes] = await Promise.all([
+          api.get(`/api/events/${eventId}`),
+          api.get(`/api/events/${eventId}/guests`),
+        ]);
+
+        console.log("✅ ReviewInvitation: Event Response:", eventRes.data);
+        console.log("✅ ReviewInvitation: Guests Response:", guestsRes.data);
+
+        if (eventRes.data.success) {
+          setEventData(eventRes.data.event);
         }
 
-        // Check if canvas element exists
-        if (!canvasRef.current) return;
-
-        // Create new canvas
-        const canvas = new fabric.Canvas(canvasRef.current, {
-          width: 400,
-          height: 533,
-          backgroundColor: "#ffffff",
-          selection: false,
-          renderOnAddRemove: true,
-        });
-
-        fabricCanvasRef.current = canvas;
-
-        // Load design data
-        await canvas.loadFromJSON(eventData.customData);
-
-        // Disable all interactions for preview
-        canvas.getObjects().forEach((obj) => {
-          obj.selectable = false;
-          obj.evented = false;
-        });
-
-        canvas.renderAll();
-      } catch (error) {
-        console.error("Error loading canvas:", error);
+        if (guestsRes.data.success) {
+          setGuestsData(guestsRes.data.guests);
+        }
+      } catch (err) {
+        console.error("❌ ReviewInvitation: Error fetching data:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    initCanvas();
+    fetchData();
+  }, [eventId]);
 
-    return () => {
-      if (fabricCanvasRef.current) {
-        fabricCanvasRef.current.dispose();
-        fabricCanvasRef.current = null;
-      }
-    };
-  }, [eventData]);
+  // Callback to get canvas instance from FabricCanvas component
+  const handleCanvasReady = (canvas: fabric.Canvas) => {
+    canvasInstanceRef.current = canvas;
+  };
+
+  // Generate PNG from canvas and upload to backend
+  const generateAndUploadImage = async (): Promise<boolean> => {
+    if (!canvasInstanceRef.current || !eventId) {
+      console.error("Canvas or eventId not available");
+      return false;
+    }
+
+    try {
+      setIsGeneratingImage(true);
+
+      // Generate PNG from canvas
+      const dataURL = canvasInstanceRef.current.toDataURL({
+        format: "png",
+        quality: 0.9,
+        multiplier: 2, // 2x resolution for better quality
+      });
+
+      // Convert data URL to Blob
+      const response = await fetch(dataURL);
+      const blob = await response.blob();
+
+      // Create FormData and append the image
+      const formData = new FormData();
+      formData.append("image", blob, "invitation.png");
+
+      // Upload to backend
+      await api.post(`/api/events/${eventId}/upload-image`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("✅ Invitation image uploaded successfully");
+      return true;
+    } catch (error) {
+      console.error("❌ Failed to generate/upload invitation image:", error);
+      return false;
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   const handleBack = () => {
     navigate(`/event/${eventId}/details`);
@@ -107,14 +122,33 @@ export const ReviewInvitation = () => {
 
     setIsSending(true);
     try {
+      // Step 1: Generate and upload invitation image
+      console.log("📸 Generating invitation image...");
+      const imageUploaded = await generateAndUploadImage();
+
+      if (!imageUploaded) {
+        alert("Failed to generate invitation image. Please try again.");
+        setIsSending(false);
+        return;
+      }
+
+      // Step 2: Publish event and send invitations
+      console.log("📧 Sending invitations for event:", eventId);
       const response = await api.post(`/api/events/${eventId}/publish`);
 
+      console.log("Publish response:", response.data);
+
       if (response.data.success) {
+        const { results } = response.data;
         // Show success message and redirect to dashboard
         alert(
-          `Successfully sent ${response.data.data.emailsSent} invitations!`
+          `Successfully sent ${results.sent} out of ${results.total} invitations!${
+            results.failed > 0 ? `\n${results.failed} failed to send.` : ""
+          }`
         );
         navigate(`/dashboard/events/${eventId}`);
+      } else {
+        alert(response.data.message || "Failed to send invitations");
       }
     } catch (error: unknown) {
       console.error("Error sending invitations:", error);
@@ -207,13 +241,15 @@ export const ReviewInvitation = () => {
               </div>
               <button
                 onClick={handleSend}
-                disabled={isSending || guestCount === 0}
+                disabled={isSending || isGeneratingImage || guestCount === 0}
                 className="flex items-center gap-2 px-6 py-3 bg-brand-orange text-white rounded-sm hover:bg-brand-orange/90 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 <Send className="w-5 h-5" />
-                {isSending
-                  ? "Sending..."
-                  : `Send to ${guestCount} ${guestCount === 1 ? "Guest" : "Guests"}`}
+                {isGeneratingImage
+                  ? "Generating Image..."
+                  : isSending
+                    ? "Sending..."
+                    : `Send to ${guestCount} ${guestCount === 1 ? "Guest" : "Guests"}`}
               </button>
             </div>
           </div>
@@ -239,7 +275,54 @@ export const ReviewInvitation = () => {
 
                 {/* Canvas Preview */}
                 <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-center">
-                  <canvas ref={canvasRef} className="shadow-lg rounded-sm" />
+                  {(() => {
+                    if (
+                      eventData?.customData &&
+                      Object.keys(eventData.customData).length > 0
+                    ) {
+                      return (
+                        <div className="w-full aspect-[3/4] max-w-[400px]">
+                          <FabricCanvas
+                            designData={eventData.customData}
+                            readOnly={true}
+                            onCanvasReady={handleCanvasReady}
+                          />
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="text-gray-400 text-center py-20 px-4">
+                          <div className="mb-4">
+                            <svg
+                              className="w-16 h-16 mx-auto mb-4 text-gray-300"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                          <p className="text-lg font-semibold text-gray-600 mb-2">
+                            No Design Created Yet
+                          </p>
+                          <p className="text-sm text-gray-500 mb-4">
+                            Create your invitation design in the editor first
+                          </p>
+                          <button
+                            onClick={handleEditDesign}
+                            className="px-4 py-2 bg-brand-orange text-white rounded-sm hover:bg-brand-orange/90 transition-colors"
+                          >
+                            Create Design
+                          </button>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
             </div>

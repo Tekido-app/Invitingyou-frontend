@@ -19,7 +19,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "fabric": "^6.9.0",
-    "framer-motion": "^12.23.26",
+    "framer-motion": "^12.30.0",
     "lucide-react": "^0.556.0",
     "papaparse": "^5.5.3",
     "react": "^19.2.0",
@@ -28,6 +28,7 @@
     "react-dom": "^19.2.0",
     "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.68.0",
+    "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.10.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.1.13"

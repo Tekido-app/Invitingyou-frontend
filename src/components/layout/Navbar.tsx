@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../hooks/useAuth";
 import { Logo } from "../ui/Logo";
 import { Button } from "../ui/Button";
@@ -18,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { transitions } from "../../utils/animations";
 
 // Icon mapping for categories
 const categoryIcons: Record<string, LucideIcon> = {
@@ -307,17 +309,37 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
+          {/* Mobile Menu Button - Touch Friendly */}
+          <motion.button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-brand-black z-50"
+            whileTap={{ scale: 0.95 }}
+            className="md:hidden p-3 text-brand-black z-50 min-w-[48px] min-h-[48px] flex items-center justify-center"
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           >
-            {isMobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </button>
+            <AnimatePresence mode="wait">
+              {isMobileMenuOpen ? (
+                <motion.div
+                  key="close"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={transitions.quick}
+                >
+                  <X className="h-6 w-6" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="menu"
+                  initial={{ rotate: 90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: -90, opacity: 0 }}
+                  transition={transitions.quick}
+                >
+                  <Menu className="h-6 w-6" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.button>
         </div>
       </div>
 
@@ -326,7 +348,7 @@ export const Navbar = () => {
         className={cn(
           "absolute left-0 right-0 bg-white shadow-premium-hover border-t border-brand-cream/20 transition-all duration-300 overflow-hidden",
           megaMenuOpen
-            ? "opacity-100 visible max-h-[400px]"
+            ? "opacity-100 visible max-h-[600px] overflow-y-auto"
             : "opacity-0 invisible max-h-0"
         )}
         onMouseEnter={() => {
@@ -336,8 +358,8 @@ export const Navbar = () => {
         onMouseLeave={() => setMegaMenuOpen(false)}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-5 gap-6">
-            {categories.slice(0, 5).map((category) => {
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+            {categories.slice(0, 15).map((category) => {
               const Icon =
                 categoryIcons[category.slug] || categoryIcons.default;
               return (
@@ -524,95 +546,130 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      <div
-        className={cn(
-          "fixed inset-0 bg-white z-40 flex flex-col pt-24 px-6 md:hidden transition-transform duration-300 ease-in-out",
-          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
-        )}
-      >
-        <div className="flex flex-col space-y-4">
-          {/* Trending Link on Mobile */}
-          <Link
-            to="/templates?trending=true"
-            className="flex items-center gap-3 p-4 rounded-sm bg-brand-cream-light transition-colors"
-          >
-            <div className="p-2 rounded-sm bg-brand-cream text-brand-black">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <span className="text-lg font-medium text-brand-black">
-              Trending
-            </span>
-          </Link>
+      {/* Mobile Menu Overlay - Animated */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={transitions.quick}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
 
-          {categories.map((category) => {
-            const Icon = categoryIcons[category.slug] || categoryIcons.default;
-            return (
-              <Link
-                key={category._id}
-                to={`/templates?category=${category.slug}`}
-                className="flex items-center gap-3 p-4 rounded-sm hover:bg-brand-cream-light transition-colors"
-              >
-                <div className="p-2 rounded-sm bg-brand-orange/10 text-brand-orange">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <span className="text-lg font-medium text-brand-charcoal">
-                  {category.name}
-                </span>
-              </Link>
-            );
-          })}
-
-          <div className="h-px bg-brand-cream my-4" />
-
-          {isLoading ? (
-            <div className="w-full h-12 bg-brand-cream-light animate-pulse rounded-sm" />
-          ) : isAuthenticated ? (
-            <>
-              <Link
-                to="/dashboard"
-                className="text-lg font-medium text-brand-black p-4"
-              >
-                Dashboard
-              </Link>
-              <button
-                onClick={logout}
-                className="text-lg font-medium text-brand-black text-left p-4"
-              >
-                Log Out
-              </button>
-            </>
-          ) : (
-            <div className="flex flex-col gap-3 mt-4">
-              <Link to="/login">
-                <Button
-                  variant="outline"
-                  className="w-full h-12 text-base rounded-sm"
-                >
-                  Log In
-                </Button>
-              </Link>
-              <Link to="/signup">
-                <Button
-                  variant="primary"
-                  className="w-full h-12 text-base rounded-sm"
-                >
-                  Sign Up
-                </Button>
-              </Link>
-            </div>
-          )}
-
-          <Link to="/templates" className="mt-4">
-            <Button
-              variant="secondary"
-              className="w-full h-14 text-base rounded-sm btn-premium"
+            {/* Menu Panel */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ ...transitions.smooth, type: "tween" }}
+              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white z-40 flex flex-col pt-20 px-6 md:hidden shadow-2xl overflow-y-auto"
             >
-              Create an Invitation
-            </Button>
-          </Link>
-        </div>
-      </div>
+              <div className="flex flex-col space-y-4">
+                {/* Trending Link on Mobile */}
+                <Link
+                  to="/templates?trending=true"
+                  className="flex items-center gap-3 p-4 rounded-sm bg-brand-cream-light transition-colors min-h-[56px]"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <div className="p-2 rounded-sm bg-brand-cream text-brand-black">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                  <span className="text-lg font-medium text-brand-black">
+                    Trending
+                  </span>
+                </Link>
+
+                {categories.map((category) => {
+                  const Icon =
+                    categoryIcons[category.slug] || categoryIcons.default;
+                  return (
+                    <Link
+                      key={category._id}
+                      to={`/templates?category=${category.slug}`}
+                      className="flex items-center gap-3 p-4 rounded-sm hover:bg-brand-cream-light transition-colors min-h-[56px]"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <div className="p-2 rounded-sm bg-brand-orange/10 text-brand-orange">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-lg font-medium text-brand-charcoal">
+                        {category.name}
+                      </span>
+                    </Link>
+                  );
+                })}
+
+                <div className="h-px bg-brand-cream my-4" />
+
+                {isLoading ? (
+                  <div className="w-full h-12 bg-brand-cream-light animate-pulse rounded-sm" />
+                ) : isAuthenticated ? (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="text-lg font-medium text-brand-black p-4 min-h-[56px] flex items-center"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="text-lg font-medium text-brand-black text-left p-4 min-h-[56px] flex items-center"
+                    >
+                      Log Out
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-3 mt-4">
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Button
+                        variant="outline"
+                        className="w-full h-12 text-base rounded-sm"
+                      >
+                        Log In
+                      </Button>
+                    </Link>
+                    <Link
+                      to="/signup"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Button
+                        variant="primary"
+                        className="w-full h-12 text-base rounded-sm"
+                      >
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+
+                <Link
+                  to="/templates"
+                  className="mt-4"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Button
+                    variant="secondary"
+                    className="w-full h-14 text-base rounded-sm btn-premium"
+                  >
+                    Create an Invitation
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

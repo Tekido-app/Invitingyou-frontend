@@ -5,6 +5,7 @@ interface FabricCanvasProps {
   designData?: object;
   onCanvasReady?: (canvas: fabric.Canvas) => void;
   onSelectionChange?: (activeObject: fabric.FabricObject | null) => void;
+  readOnly?: boolean;
 }
 
 /**
@@ -14,6 +15,7 @@ export const FabricCanvas = ({
   designData,
   onCanvasReady,
   onSelectionChange,
+  readOnly = false,
 }: FabricCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -47,38 +49,62 @@ export const FabricCanvas = ({
           width: BASE_WIDTH,
           height: BASE_HEIGHT,
           backgroundColor: "#ffffff",
-          selection: true,
+          selection: !readOnly, // Disable selection if readOnly
           preserveObjectStacking: true,
+          interactive: !readOnly, // Disable interaction if readOnly
         });
 
         fabricRef.current = canvas;
 
-        // Selection handlers
-        canvas.on("selection:created", (e) => {
-          onSelectionChangeRef.current?.(e.selected?.[0] || null);
-        });
-        canvas.on("selection:updated", (e) => {
-          onSelectionChangeRef.current?.(e.selected?.[0] || null);
-        });
-        canvas.on("selection:cleared", () => {
-          onSelectionChangeRef.current?.(null);
-        });
+        if (!readOnly) {
+          // Selection handlers only if not readOnly
+          canvas.on("selection:created", (e) => {
+            onSelectionChangeRef.current?.(e.selected?.[0] || null);
+          });
+          canvas.on("selection:updated", (e) => {
+            onSelectionChangeRef.current?.(e.selected?.[0] || null);
+          });
+          canvas.on("selection:cleared", () => {
+            onSelectionChangeRef.current?.(null);
+          });
 
-        // Object modification handlers
-        canvas.on("object:modified", () => {
-          canvas.requestRenderAll();
-        });
+          // Object modification handlers
+          canvas.on("object:modified", () => {
+            canvas.requestRenderAll();
+          });
+        }
 
-        // Scale canvas to fit container
+        // Scale canvas to fit container - optimized for both mobile and desktop
         const resizeCanvas = () => {
           if (!container) return;
 
           const containerWidth = container.clientWidth;
           const containerHeight = container.clientHeight;
+          const screenWidth = window.innerWidth;
 
-          const scaleX = (containerWidth - 40) / BASE_WIDTH;
-          const scaleY = (containerHeight - 40) / BASE_HEIGHT;
-          const scale = Math.min(scaleX, scaleY, 1);
+          let scale: number;
+
+          if (screenWidth < 768) {
+            // MOBILE: Canvas width should be 85% of viewport width
+            const targetWidth = screenWidth * 0.85;
+            scale = targetWidth / BASE_WIDTH;
+          } else if (screenWidth < 1280) {
+            // Tablet/Small laptop: Moderate scaling
+            const padding = 24;
+            const availableWidth = containerWidth - padding * 2;
+            const availableHeight = containerHeight - padding * 2;
+            const scaleX = availableWidth / BASE_WIDTH;
+            const scaleY = availableHeight / BASE_HEIGHT;
+            scale = Math.min(scaleX, scaleY, 1.5);
+          } else {
+            // Large desktop: Fill the available space well
+            const padding = 32;
+            const availableWidth = containerWidth - padding * 2;
+            const availableHeight = containerHeight - padding * 2;
+            const scaleX = availableWidth / BASE_WIDTH;
+            const scaleY = availableHeight / BASE_HEIGHT;
+            scale = Math.min(scaleX, scaleY, 2.0);
+          }
 
           const width = Math.round(BASE_WIDTH * scale);
           const height = Math.round(BASE_HEIGHT * scale);
@@ -114,7 +140,7 @@ export const FabricCanvas = ({
       }
       setIsReady(false);
     };
-  }, []);
+  }, [readOnly]);
 
   // Load design data
   const loadedRef = useRef(false);
@@ -132,13 +158,28 @@ export const FabricCanvas = ({
       .then(() => {
         canvas.getObjects().forEach((obj) => {
           obj.setCoords();
+          if (readOnly) {
+            // Make objects unselectable and immutable
+            obj.set({
+              selectable: false,
+              evented: false,
+              lockMovementX: true,
+              lockMovementY: true,
+              lockRotation: true,
+              lockScalingX: true,
+              lockScalingY: true,
+              hasControls: false,
+              hasBorders: false,
+              hoverCursor: "default",
+            });
+          }
         });
         canvas.requestRenderAll();
       })
       .catch((err: Error) => {
         console.error("Failed to load design data:", err);
       });
-  }, [designData, isReady]);
+  }, [designData, isReady, readOnly]);
 
   return (
     <div
