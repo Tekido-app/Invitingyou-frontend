@@ -1,7 +1,7 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import * as fabric from "fabric";
-import type { ObjectProperties } from "../types/fabric";
+
 import { FabricCanvas } from "../components/editor/FabricCanvas";
 import { ColorPicker } from "../components/editor/ColorPicker";
 import { TextToolbar } from "../components/editor/TextToolbar";
