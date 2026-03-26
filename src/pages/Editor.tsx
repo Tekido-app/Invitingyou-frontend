@@ -112,7 +112,7 @@ export const Editor = () => {
   const saveHistory = (canvas: fabric.Canvas) => {
     if (processingRef.current) return;
 
-    const json = JSON.stringify(canvas.toJSON(["id", "selectable"]));
+    const json = JSON.stringify((canvas as any).toJSON(["id", "selectable"]));
 
     setHistory((prev) => {
       const currentStep = historyStepRef.current;
@@ -261,10 +261,14 @@ export const Editor = () => {
   }, [selectedObject]);
 
   // Text update handler
-  const handleTextUpdate = (property: keyof ObjectProperties, value: any) => {
+  const handleTextUpdate = (propertyOrProperties: any, value?: any) => {
     if (!selectedObject || !canvas) return;
 
-    selectedObject.set(property as any, value);
+    if (typeof propertyOrProperties === 'string') {
+      selectedObject.set(propertyOrProperties as any, value);
+    } else {
+      selectedObject.set(propertyOrProperties);
+    }
     canvas.renderAll();
     saveHistory(canvas);
   };
@@ -299,7 +303,7 @@ export const Editor = () => {
     setSaveStatus("saving");
 
     try {
-      const designData = canvas.toJSON(["id", "selectable"]);
+      const designData = (canvas as any).toJSON(["id", "selectable"]);
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
       const token = localStorage.getItem("token");
 

@@ -557,12 +557,13 @@ export const CreateEvent = () => {
                         Finish Later
                       </Button>
                       {eventId && (
-                        <SendInvitesButton
-                          eventId={eventId}
-                          guestCount={guests.length}
-                          onSuccess={handlePublishSuccess}
-                          className="w-full sm:w-auto min-h-[48px] order-1 sm:order-2"
-                        />
+                        <div className="w-full sm:w-auto min-h-[48px] order-1 sm:order-2">
+                          <SendInvitesButton
+                            eventId={eventId}
+                            guestCount={guests.length}
+                            onSuccess={handlePublishSuccess}
+                          />
+                        </div>
                       )}
                     </div>
                   </div>
